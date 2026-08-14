@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAKSHYA (साक्ष्य) : Investigator Workstation Console PoC</title>
+    <meta name="description"
+        content="Interactive Investigator Workstation Dashboard for SAKSHYA Agentic Knowledge System. Case triage, live agent scan execution, per-file SQLite crash recovery, human review queue, Section 63 BSA signature, and charge sheet compilation.">
+    <link rel="stylesheet" href="../style.css">
+</head>
+
+<body>
+
+    <!-- Dynamic Canvas Grid Background -->
+    <div id="grid-container"></div>
+
+    <!-- Navigation Bar -->
+    <nav class="navbar" id="navbar">
+        <div class="logo">
+            <div class="logo-shield">सा</div>
+            <span>SAKSHYA</span>
+            <span class="logo-tag">WORKSTATION POC</span>
+        </div>
+        <div style="display: flex; gap: 1rem; align-items: center;">
+            <span class="badge" style="color: #1E40AF; background: #EFF6FF;">Case CY-2026-0841</span>
+            <span class="badge" style="color: #7C3AED; background: #F5F3FF;">POCSO / BSA 2023</span>
+            <a href="../index.html" class="btn btn-outline" style="font-size: 0.8rem; padding: 0.5rem 1.2rem;">← Landing Page</a>
+        </div>
+    </nav>
+
+    <!-- Workstation Container Section -->
+    <section style="padding: 2.5rem 5%;">
+        <div class="ws-container">
+            <!-- Guided Walkthrough Banner -->
+            <div class="ws-walkthrough-bar">
+                <div class="ws-walkthrough-header">
+                    <span class="ws-walkthrough-tag">🎯 GUIDED INVESTIGATOR TOUR</span>
+                    <span style="font-size: 0.8rem; color: #78350F; font-weight: 500;">Step-by-step interactive workflow demo</span>
+                </div>
+                <div class="ws-walkthrough-steps">
+                    <button class="ws-step-btn active" id="ws-step-btn-0" onclick="goWsWalkStep(0)">1. Open Case</button>
+                    <button class="ws-step-btn" id="ws-step-btn-1" onclick="goWsWalkStep(1)">2. Scan Profile</button>
+                    <button class="ws-step-btn" id="ws-step-btn-2" onclick="goWsWalkStep(2)">3. Live Agents & Crash Demo</button>
+                    <button class="ws-step-btn" id="ws-step-btn-3" onclick="goWsWalkStep(3)">4. Evidence Files</button>
+                    <button class="ws-step-btn" id="ws-step-btn-4" onclick="goWsWalkStep(4)">5. Approve / Reject</button>
+                    <button class="ws-step-btn" id="ws-step-btn-5" onclick="goWsWalkStep(5)">6. Sign BSA Cert</button>
+                    <button class="ws-step-btn" id="ws-step-btn-6" onclick="goWsWalkStep(6)">7. Charge Sheet</button>
+                </div>
+                <div class="ws-walkthrough-hint" id="ws-walkthrough-hint-box">
+                    <div style="flex: 1;">
+                        <span style="font-weight: 700; color: var(--accent-orange);" id="ws-hint-step-title">Step 1: Open a case</span>
+                        <p id="ws-hint-step-text" style="margin-top: 0.25rem; font-size: 0.85rem; color: #451A03;">
+                            This is your case overview. All seized devices, clone hashes, Faraday isolation records, and legal status at a glance. The IO starts every investigation here.
+                        </p>
+                    </div>
+                    <div class="ws-hint-nav">
+                        <button class="ws-hint-btn" id="ws-prev-btn" onclick="prevWsWalkStep()" disabled>← Prev</button>
+                        <button class="ws-hint-btn" id="ws-next-btn" onclick="nextWsWalkStep()">Next →</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Workstation Console Top Status Header -->
+            <div class="ws-header">
+                <div class="ws-header-title">
+                    <div class="ws-header-shield">सा</div>
+                    <div>
+                        <h3>SAKSHYA Investigator Workstation</h3>
+                        <span class="ws-header-sub">Case CY-2026-0841 · Kerala Police Cyberdome · High-Priority POCSO Case</span>
+                    </div>
+                </div>
+                <div class="ws-header-badges">
+                    <span class="badge" style="color: #1E40AF; background: #EFF6FF;">Case CY-2026-0841</span>
+                    <span class="badge" style="color: #7C3AED; background: #F5F3FF;">Suspect: VIPER (alias)</span>
+                    <span class="badge" style="color: #059669; background: #ECFDF5;">● Live Workstation Session</span>
+                </div>
+            </div>
+
+            <!-- Workstation Navigation Tabs -->
+            <div class="ws-nav">
+                <button class="ws-tab-btn active" id="ws-tab-dashboard" onclick="switchWsTab('dashboard')">Case Overview</button>
+                <button class="ws-tab-btn" id="ws-tab-scan" onclick="switchWsTab('scan')">Scan Console</button>
+                <button class="ws-tab-btn" id="ws-tab-evidence" onclick="switchWsTab('evidence')">Evidence Files</button>
+                <button class="ws-tab-btn" id="ws-tab-review" onclick="switchWsTab('review')">Review Queue <span class="ws-badge-count" id="ws-review-count-badge">2</span></button>
+                <button class="ws-tab-btn" id="ws-tab-certificate" onclick="switchWsTab('certificate')">BSA Certificate <span class="ws-badge-cert" id="ws-cert-status-badge">Unsigned</span></button>
+                <button class="ws-tab-btn" id="ws-tab-chargesheet" onclick="switchWsTab('chargesheet')">Charge Sheet</button>
+            </div>
+
+            <!-- Workstation Body Content Panels -->
+            <div class="ws-body">
+
+                <!-- 1. Case Overview Panel -->
+                <div class="ws-panel active" id="ws-panel-dashboard">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                        <div>
+                            <h3 style="font-size: 1.3rem; text-transform: uppercase; font-weight: 700;">Case CY-2026-0841 Overview</h3>
+                            <p style="font-size: 0.88rem; color: var(--text-muted);">Assigned Investigating Officer: <strong>IO Ramesh Kumar</strong> · Opened 2026-08-11</p>
+                        </div>
+                        <button class="btn btn-primary" onclick="switchWsTab('scan')" style="font-size: 0.8rem; padding: 0.5rem 1.2rem;">▶ Go to Scan Console</button>
+                    </div>
+
+                    <!-- Metrics Grid -->
+                    <div class="ws-stat-grid">
+                        <div class="ws-stat-card">
+                            <span class="ws-stat-label">Total Seized Files</span>
+                            <span class="ws-stat-val">6</span>
+                            <span class="ws-stat-sub">1.2 GB Ingested Stream</span>
+                        </div>
+                        <div class="ws-stat-card" style="border-left-color: var(--accent-red);">
+                            <span class="ws-stat-label" style="color: var(--accent-red);">P0 Imminent Risk Alerts</span>
+                            <span class="ws-stat-val" style="color: var(--accent-red);">2</span>
+                            <span class="ws-stat-sub">Hash Match & CSAM Flag</span>
+                        </div>
+                        <div class="ws-stat-card" style="border-left-color: var(--accent-gold);">
+                            <span class="ws-stat-label" style="color: var(--accent-gold);">Pending Human Review</span>
+                            <span class="ws-stat-val" id="ws-stat-review-val" style="color: var(--accent-gold);">2</span>
+                            <span class="ws-stat-sub">Confidence &lt; 85%</span>
+                        </div>
+                        <div class="ws-stat-card" style="border-left-color: var(--accent-navy);">
+                            <span class="ws-stat-label">Sec 63 BSA Cert Status</span>
+                            <span class="ws-stat-val" id="ws-stat-cert-val" style="font-size: 1.3rem; line-height: 1.6; color: var(--accent-red);">Unsigned</span>
+                            <span class="ws-stat-sub" id="ws-stat-cert-sub">Requires IO Signature</span>
+                        </div>
+                    </div>
+
+                    <!-- Interactive Neo4j Evidence Knowledge Graph Map -->
+                    <div class="ws-card" style="margin-bottom: 1.5rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+                            <h4 style="font-size: 1rem; text-transform: uppercase; font-weight: 700;">Neo4j Evidence Knowledge Graph Visualizer</h4>
+                            <span class="badge badge-saffron">Cross-Tool Node Correlation Map</span>
+                        </div>
+                        <div style="background: var(--accent-navy); border: 2px solid var(--border-hard); border-radius: 8px; padding: 1.5rem; text-align: center; position: relative; min-height: 220px; display: flex; align-items: center; justify-content: center;">
+                            <svg width="100%" height="200" viewBox="0 0 700 200" style="max-width: 700px;">
+                                <!-- Connecting Edges -->
+                                <line x1="100" y1="100" x2="250" y2="50" stroke="#FF5400" stroke-width="2.5" stroke-dasharray="4" />
+                                <line x1="100" y1="100" x2="250" y2="150" stroke="#FF5400" stroke-width="2.5" />
+                                <line x1="250" y1="50" x2="450" y2="50" stroke="#059669" stroke-width="2.5" />
+                                <line x1="250" y1="150" x2="450" y2="150" stroke="#DC2626" stroke-width="2.5" />
+                                <line x1="450" y1="50" x2="600" y2="100" stroke="#0284C7" stroke-width="2.5" />
+                                <line x1="450" y1="150" x2="600" y2="100" stroke="#0284C7" stroke-width="2.5" />
+
+                                <!-- Nodes -->
+                                <g transform="translate(100, 100)">
+                                    <circle r="32" fill="#FF5400" stroke="#FFF" stroke-width="2" />
+                                    <text text-anchor="middle" dy="4" fill="#FFF" font-weight="bold" font-size="11">VIPER_09</text>
+                                    <text text-anchor="middle" dy="45" fill="#CBD5E1" font-size="10">Suspect Node</text>
+                                </g>
+
+                                <g transform="translate(250, 50)">
+                                    <circle r="26" fill="#0D1B2A" stroke="#FF6B00" stroke-width="2" />
+                                    <text text-anchor="middle" dy="4" fill="#FFF" font-weight="bold" font-size="10">Telegram</text>
+                                    <text text-anchor="middle" dy="38" fill="#CBD5E1" font-size="9">Chat Log</text>
+                                </g>
+
+                                <g transform="translate(250, 150)">
+                                    <circle r="26" fill="#0D1B2A" stroke="#FF6B00" stroke-width="2" />
+                                    <text text-anchor="middle" dy="4" fill="#FFF" font-weight="bold" font-size="10">iPhone 15</text>
+                                    <text text-anchor="middle" dy="38" fill="#CBD5E1" font-size="9">Seized Device</text>
+                                </g>
+
+                                <g transform="translate(450, 50)">
+                                    <circle r="28" fill="#059669" stroke="#FFF" stroke-width="2" />
+                                    <text text-anchor="middle" dy="4" fill="#FFF" font-weight="bold" font-size="10">IMG_8849</text>
+                                    <text text-anchor="middle" dy="40" fill="#CBD5E1" font-size="9">EXIF 9.98°N 76.29°E</text>
+                                </g>
+
+                                <g transform="translate(450, 150)">
+                                    <circle r="28" fill="#DC2626" stroke="#FFF" stroke-width="2" />
+                                    <text text-anchor="middle" dy="4" fill="#FFF" font-weight="bold" font-size="10">CSAM Hash</text>
+                                    <text text-anchor="middle" dy="40" fill="#CBD5E1" font-size="9">PDQ Match #71b7</text>
+                                </g>
+
+                                <g transform="translate(600, 100)">
+                                    <circle r="30" fill="#0284C7" stroke="#FFF" stroke-width="2" />
+                                    <text text-anchor="middle" dy="4" fill="#FFF" font-weight="bold" font-size="10">Sec 63 Cert</text>
+                                    <text text-anchor="middle" dy="42" fill="#CBD5E1" font-size="9">Admissible Evidence</text>
+                                </g>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- Device & Chain of Custody Box -->
+                    <div class="ws-card" style="margin-bottom: 1.5rem;">
+                        <h4 style="font-size: 1rem; text-transform: uppercase; font-weight: 700; margin-bottom: 1rem; border-bottom: 1.5px solid var(--border-hard); padding-bottom: 0.5rem;">
+                            Seized Hardware & Chain of Custody Log
+                        </h4>
+                        <div class="brutal-table-wrap">
+                            <table class="brutal-table" style="font-size: 0.85rem;">
+                                <tbody>
+                                    <tr>
+                                        <td style="font-weight: 700; width: 200px;">Target Suspect Identity</td>
+                                        <td>VIPER (alias) — Telegram Handle @Viper_09</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="font-weight: 700;">Seized Device Hardware</td>
+                                        <td style="font-family: var(--font-mono);">iPhone 15 Pro (A3106) — IMEI 359281104829104</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="font-weight: 700;">Bit-Stream Clone SHA-256</td>
+                                        <td style="font-family: var(--font-mono); color: var(--accent-saffron); font-weight: 700;">71b70b91e28cc6d4fa8b21008c1e4590119f821a95c47890b21e001928471b8e</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="font-weight: 700;">Write-Blocker Status</td>
+                                        <td><span style="color: var(--accent-green); font-weight: 700;">✓ Verified Physical Write-Blocker Used</span> (Original drive untouched)</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="font-weight: 700;">Faraday RF Isolation</td>
+                                        <td><span style="color: var(--accent-green); font-weight: 700;">✓ Confirmed Seizure Bagging</span> (Remote wipe signals blocked)</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="font-weight: 700;">Analysis Execution Target</td>
+                                        <td>Cloned Image Drive Only (Admissible under Section 57/63 BSA 2023)</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- P0 Alert Banner -->
+                    <div style="background: #FEF2F2; border: 2px solid #DC2626; border-radius: 8px; padding: 1rem 1.25rem; color: #991B1B; font-size: 0.88rem; display: flex; align-items: center; gap: 1rem;">
+                        <span style="font-size: 1.5rem;">⚠</span>
+                        <div>
+                            <strong>P0 Imminent Risk Alert:</strong> 2 media files matched known CSAM hash list entries. Immediate triage required. AI pre-filled Section 63 certificate awaiting IO signature before court submission.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Scan Console Panel -->
+                <div class="ws-panel" id="ws-panel-scan">
+                    <div style="margin-bottom: 1.5rem;">
+                        <h3 style="font-size: 1.3rem; text-transform: uppercase; font-weight: 700;">Scan Console & Dynamic Agent Selector</h3>
+                        <p style="font-size: 0.88rem; color: var(--text-muted);">
+                            Choose a scan profile. SAKSHYA's dependency resolver only executes required agent tools — unused agents never claim CPU cycles or tasks.
+                        </p>
+                    </div>
+
+                    <!-- Profile Selector Grid -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.5rem;">
+                        <div class="ws-profile-card active" id="ws-prof-sprint" onclick="selectWsProfile('sprint')">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                                <h4 style="font-size: 1.1rem; font-weight: 700;">CSAM ID Sprint</h4>
+                                <span class="badge badge-green">Fastest Triage</span>
+                            </div>
+                            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+                                Hash match + normalizer + synthetic detector only. Fastest path to known-content identification.
+                            </p>
+                            <div style="display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.75rem;">
+                                <span class="badge" style="font-size: 0.68rem;">Normalizer</span>
+                                <span class="badge" style="font-size: 0.68rem; color: var(--accent-orange);">Hash Match (PDQ)</span>
+                                <span class="badge" style="font-size: 0.68rem;">Synthetic Detect</span>
+                            </div>
+                            <div style="font-family: var(--font-mono); font-size: 0.8rem; font-weight: 700; color: var(--accent-navy);">
+                                Total Tasks: 18 · Est. Wall Time: ~2.18s (~2 hrs real scale)
+                            </div>
+                        </div>
+
+                        <div class="ws-profile-card" id="ws-prof-full" onclick="selectWsProfile('full')">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                                <h4 style="font-size: 1.1rem; font-weight: 700;">Full Investigation</h4>
+                                <span class="badge badge-saffron">Comprehensive</span>
+                            </div>
+                            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+                                All 14 agents across 6 tiers. Ends with automatic BSA Section 63 certificate pre-fill + charge sheet draft.
+                            </p>
+                            <div style="display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.75rem;">
+                                <span class="badge" style="font-size: 0.68rem;">Normalizer</span>
+                                <span class="badge" style="font-size: 0.68rem;">OCR</span>
+                                <span class="badge" style="font-size: 0.68rem;">Metadata</span>
+                                <span class="badge" style="font-size: 0.68rem;">ArcFace</span>
+                                <span class="badge" style="font-size: 0.68rem;">NLP</span>
+                                <span class="badge" style="font-size: 0.68rem;">Sec 63 Cert</span>
+                            </div>
+                            <div style="font-family: var(--font-mono); font-size: 0.8rem; font-weight: 700; color: var(--accent-navy);">
+                                Total Tasks: 54 · Est. Wall Time: ~3.62s (~40 hrs real scale)
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Execution Buttons -->
+                    <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+                        <button class="btn btn-primary" id="ws-btn-start" onclick="startWsScan()">▶ Start Live Scan</button>
+                        <button class="btn btn-secondary" id="ws-btn-kill" onclick="killWsWorker()" disabled style="opacity: 0.5;">⚡ Kill Worker (Demo Crash Recovery)</button>
+                    </div>
+
+                    <!-- Live Scan Progress Box -->
+                    <div class="ws-card" style="margin-bottom: 1.5rem;" id="ws-progress-box">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                            <span style="font-weight: 700; font-size: 0.9rem;">Scan Execution Progress</span>
+                            <span style="font-family: var(--font-mono); font-size: 0.85rem; font-weight: bold;" id="ws-progress-text">0 / 18 tasks completed (0%)</span>
+                        </div>
+                        <div style="background: var(--bg-base); border: 1.5px solid var(--border-hard); border-radius: 99px; height: 12px; overflow: hidden; padding: 2px;">
+                            <div id="ws-progress-bar" style="background: var(--accent-orange); width: 0%; height: 100%; border-radius: 99px; transition: width 0.15s ease;"></div>
+                        </div>
+
+                        <!-- Crash Recovery Banner Alert -->
+                        <div id="ws-crash-alert-box" style="margin-top: 1rem; display: none;"></div>
+                    </div>
+
+                    <!-- Interactive Custom ReAct LLM Query Box -->
+                    <div class="ws-card" style="margin-bottom: 1.5rem; background: #FFF;">
+                        <h4 style="font-size: 1rem; font-weight: 700; text-transform: uppercase; margin-bottom: 0.5rem;">
+                            Interactive ReAct Orchestrator Natural Language Query Console
+                        </h4>
+                        <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1rem;">
+                            Type any custom forensic investigation query or click suggestion pills to execute live LLM reasoning loops over tools.
+                        </p>
+                        <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+                            <input type="text" id="react-custom-input" placeholder="e.g. Find secrecy instructions in chat dump and map EXIF coordinates..."
+                                style="flex: 1; padding: 0.75rem 1rem; border: 2px solid var(--border-hard); border-radius: 6px; font-family: var(--font-sans); font-size: 0.88rem;">
+                            <button class="btn btn-primary" onclick="runCustomReactQuery()" style="font-size: 0.82rem; padding: 0.75rem 1.25rem;">
+                                Run ReAct Query ➔
+                            </button>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                            <span style="font-size: 0.75rem; color: var(--text-muted); align-self: center; font-weight: bold;">Quick Prompts:</span>
+                            <button class="preset-btn" onclick="runCustomReactQuery('grooming')" style="font-size: 0.72rem; padding: 0.25rem 0.6rem;">💬 Secrecy Chat Instructions</button>
+                            <button class="preset-btn" onclick="runCustomReactQuery('gps')" style="font-size: 0.72rem; padding: 0.25rem 0.6rem;">📍 EXIF Image Coordinates</button>
+                            <button class="preset-btn" onclick="runCustomReactQuery('face')" style="font-size: 0.72rem; padding: 0.25rem 0.6rem;">👤 ArcFace Identity Matching</button>
+                            <button class="preset-btn" onclick="runCustomReactQuery('crypto')" style="font-size: 0.72rem; padding: 0.25rem 0.6rem;">₿ BTC Wallet Tracing</button>
+                        </div>
+                    </div>
+
+                    <!-- ReAct Reasoning Trace Component -->
+                    <div class="ws-card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+                            <h4 style="font-size: 1rem; font-weight: 700; text-transform: uppercase;">Orchestrator Execution Trace</h4>
+                            <span style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--accent-orange); font-weight: 700;">Local Ollama LLM Reasoning</span>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+                            <button class="preset-btn active" id="ws-trace-btn-0" onclick="switchWsTrace(0)">Turn 1</button>
+                            <button class="preset-btn" id="ws-trace-btn-1" onclick="switchWsTrace(1)">Turn 2</button>
+                            <button class="preset-btn" id="ws-trace-btn-2" onclick="switchWsTrace(2)">Turn 3</button>
+                        </div>
+                        <div id="ws-trace-content-box">
+                            <!-- Injected dynamically via JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Evidence Files Panel -->
+                <div class="ws-panel" id="ws-panel-evidence">
+                    <div style="margin-bottom: 1.25rem;">
+                        <h3 style="font-size: 1.3rem; text-transform: uppercase; font-weight: 700;">Ingested Evidence Files</h3>
+                        <p style="font-size: 0.88rem; color: var(--text-muted);">
+                            Sorted by risk severity. POCSO auto-redaction masks victim identity faces and sensitive PII before display. Click <strong>Inspect Artifact</strong> to open full forensic metadata.
+                        </p>
+                    </div>
+
+                    <div style="background: #ECFDF5; border: 1.5px solid #059669; border-radius: 6px; padding: 0.75rem 1rem; margin-bottom: 1.5rem; font-size: 0.82rem; color: #065F46;">
+                        <strong>🔒 Privacy Protection Active:</strong> Automatic face blurring applied to all P0/P1 image frames. Full unredacted files remain sealed in bit-stream clone drive.
+                    </div>
+
+                    <div class="brutal-table-wrap">
+                        <table class="brutal-table" style="font-size: 0.85rem;">
+                            <thead>
+                                <tr>
+                                    <th>File Name</th>
+                                    <th>Type</th>
+                                    <th>Size</th>
+                                    <th>Status</th>
+                                    <th>Agents Executed</th>
+                                    <th>Risk Level</th>
+                                    <th>Inspect</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td style="font-family: var(--font-mono); font-weight: bold;">chat_screenshot.png</td>
+                                    <td>PNG Image</td>
+                                    <td>820 KB</td>
+                                    <td><span style="color: var(--accent-green); font-weight: bold;">✓ Done</span></td>
+                                    <td>
+                                        <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+                                            <span class="badge" style="font-size: 0.65rem;">Normalizer</span>
+                                            <span class="badge" style="font-size: 0.65rem;">OCR</span>
+                                            <span class="badge" style="font-size: 0.65rem; color: var(--accent-orange);">NLP</span>
+                                        </div>
+                                    </td>
+                                    <td><span class="badge" style="background: #FEF2F2; color: #DC2626; border-color: #DC2626; font-weight: bold;">P0 (Imminent)</span></td>
+                                    <td><button class="btn btn-outline" style="font-size: 0.72rem; padding: 0.25rem 0.6rem;" onclick="openArtifactModal('chat_screenshot.png')">👁 Inspect</button></td>
+                                </tr>
+                                <tr>
+                                    <td style="font-family: var(--font-mono); font-weight: bold;">known_file_copy.png</td>
+                                    <td>PNG Image</td>
+                                    <td>210 KB</td>
+                                    <td><span style="color: var(--accent-green); font-weight: bold;">✓ Done</span></td>
+                                    <td>
+                                        <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+                                            <span class="badge" style="font-size: 0.65rem;">Normalizer</span>
+                                            <span class="badge" style="font-size: 0.65rem; color: var(--accent-orange);">PDQ Hash</span>
+                                        </div>
+                                    </td>
+                                    <td><span class="badge" style="background: #FEF2F2; color: #DC2626; border-color: #DC2626; font-weight: bold;">P0 (Imminent)</span></td>
+                                    <td><button class="btn btn-outline" style="font-size: 0.72rem; padding: 0.25rem 0.6rem;" onclick="openArtifactModal('known_file_copy.png')">👁 Inspect</button></td>
+                                </tr>
+                                <tr>
+                                    <td style="font-family: var(--font-mono); font-weight: bold;">IMG_8849.JPG</td>
+                                    <td>JPEG Image</td>
+                                    <td>4.2 MB</td>
+                                    <td><span style="color: var(--accent-green); font-weight: bold;">✓ Done</span></td>
+                                    <td>
+                                        <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+                                            <span class="badge" style="font-size: 0.65rem;">Normalizer</span>
+                                            <span class="badge" style="font-size: 0.65rem;">Metadata</span>
+                                            <span class="badge" style="font-size: 0.65rem;">ArcFace</span>
+                                        </div>
+                                    </td>
+                                    <td><span class="badge" style="background: #FFFBEB; color: #D97706; border-color: #D97706; font-weight: bold;">P1 (High)</span></td>
+                                    <td><button class="btn btn-outline" style="font-size: 0.72rem; padding: 0.25rem 0.6rem;" onclick="openArtifactModal('IMG_8849.JPG')">👁 Inspect</button></td>
+                                </tr>
+                                <tr>
+                                    <td style="font-family: var(--font-mono); font-weight: bold;">invoice_aug.pdf</td>
+                                    <td>PDF Document</td>
+                                    <td>1.1 MB</td>
+                                    <td><span style="color: var(--accent-green); font-weight: bold;">✓ Done</span></td>
+                                    <td>
+                                        <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+                                            <span class="badge" style="font-size: 0.65rem;">Normalizer</span>
+                                            <span class="badge" style="font-size: 0.65rem;">Financial</span>
+                                        </div>
+                                    </td>
+                                    <td><span class="badge" style="background: #EFF6FF; color: #2563EB; border-color: #2563EB; font-weight: bold;">P2 (Medium)</span></td>
+                                    <td><button class="btn btn-outline" style="font-size: 0.72rem; padding: 0.25rem 0.6rem;" onclick="openArtifactModal('invoice_aug.pdf')">👁 Inspect</button></td>
+                                </tr>
+                                <tr>
+                                    <td style="font-family: var(--font-mono); font-weight: bold;">plate_capture.mp4</td>
+                                    <td>MP4 Video</td>
+                                    <td>22 MB</td>
+                                    <td><span style="color: var(--accent-gold); font-weight: bold;">◌ Processing</span></td>
+                                    <td>
+                                        <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+                                            <span class="badge" style="font-size: 0.65rem;">Normalizer</span>
+                                            <span class="badge" style="font-size: 0.65rem;">ANPR</span>
+                                        </div>
+                                    </td>
+                                    <td><span style="color: var(--text-muted);">—</span></td>
+                                    <td><button class="btn btn-outline" style="font-size: 0.72rem; padding: 0.25rem 0.6rem;" disabled style="opacity: 0.4;">Processing</button></td>
+                                </tr>
+                                <tr>
+                                    <td style="font-family: var(--font-mono); font-weight: bold;">voice_note.m4a</td>
+                                    <td>Audio Clip</td>
+                                    <td>3.4 MB</td>
+                                    <td><span style="color: var(--text-muted);">○ Queued</span></td>
+                                    <td><span style="color: var(--text-muted);">—</span></td>
+                                    <td><span style="color: var(--text-muted);">—</span></td>
+                                    <td><button class="btn btn-outline" style="font-size: 0.72rem; padding: 0.25rem 0.6rem;" disabled style="opacity: 0.4;">Queued</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 4. Review Queue Panel -->
+                <div class="ws-panel" id="ws-panel-review">
+                    <div style="margin-bottom: 1.5rem;">
+                        <h3 style="font-size: 1.3rem; text-transform: uppercase; font-weight: 700;">Human-in-the-Loop Review Queue</h3>
+                        <p style="font-size: 0.88rem; color: var(--text-muted);">
+                            Low-confidence agent correlations wait here. SAKSHYA <strong>never auto-merges</strong> identities or grooming claims without Investigating Officer approval.
+                        </p>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 1.25rem;" id="ws-review-queue-list">
+                        <!-- Review Card 1 -->
+                        <div class="ws-card" id="ws-review-item-r001">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+                                <div>
+                                    <h4 style="font-size: 1.1rem; font-weight: 700; color: var(--accent-navy);">Identity Link — IMG_8849.JPG ↔ person_B.jpg</h4>
+                                    <span class="badge" style="color: #7C3AED; background: #F5F3FF; margin-top: 0.3rem;">ArcFace Face Correlation</span>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Confidence Score</div>
+                                    <div style="font-family: var(--font-mono); font-size: 1.5rem; font-weight: bold; color: var(--accent-gold);">68%</div>
+                                </div>
+                            </div>
+
+                            <div style="background: var(--bg-base); border: 1px solid var(--border-hard); padding: 0.85rem; border-radius: 6px; font-size: 0.85rem; margin-bottom: 1rem;">
+                                <strong>Agent Detail:</strong> Cosine similarity 0.68 (above auto-link threshold 0.62, below auto-merge threshold 0.85). Corroborating signal: shared GPS coordinates in Ernakulam (9.9816° N, 76.2999° E). Recommend: confirm suspect identity link before adding edge to Neo4j graph.
+                            </div>
+
+                            <div id="ws-review-action-r001" style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                                <button class="btn btn-primary" onclick="approveWsReview('r001')" style="background: #059669; border-color: var(--border-hard); font-size: 0.8rem; padding: 0.5rem 1.2rem;">✓ Approve & Add to Graph</button>
+                                <button class="btn btn-outline" onclick="rejectWsReview('r001')" style="color: #DC2626; border-color: #DC2626; font-size: 0.8rem; padding: 0.5rem 1.2rem;">✗ Reject Link</button>
+                            </div>
+                        </div>
+
+                        <!-- Review Card 2 -->
+                        <div class="ws-card" id="ws-review-item-r002">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+                                <div>
+                                    <h4 style="font-size: 1.1rem; font-weight: 700; color: var(--accent-navy);">Grooming Pattern Flag — chat_screenshot.png</h4>
+                                    <span class="badge" style="color: #7C3AED; background: #F5F3FF; margin-top: 0.3rem;">NLP Grooming Classifier</span>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Confidence Score</div>
+                                    <div style="font-family: var(--font-mono); font-size: 1.5rem; font-weight: bold; color: var(--accent-green);">83%</div>
+                                </div>
+                            </div>
+
+                            <div style="background: var(--bg-base); border: 1px solid var(--border-hard); padding: 0.85rem; border-radius: 6px; font-size: 0.85rem; margin-bottom: 1rem;">
+                                <strong>Agent Detail:</strong> OCR text contains phrases matching grooming indicators (secrecy instruction + gift offering pattern). POCSO relevance flagged. Recommend: include in charge sheet narrative.
+                            </div>
+
+                            <div id="ws-review-action-r002" style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                                <button class="btn btn-primary" onclick="approveWsReview('r002')" style="background: #059669; border-color: var(--border-hard); font-size: 0.8rem; padding: 0.5rem 1.2rem;">✓ Approve & Add to Graph</button>
+                                <button class="btn btn-outline" onclick="rejectWsReview('r002')" style="color: #DC2626; border-color: #DC2626; font-size: 0.8rem; padding: 0.5rem 1.2rem;">✗ Reject Flag</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5. BSA Certificate Panel -->
+                <div class="ws-panel" id="ws-panel-certificate">
+                    <div style="margin-bottom: 1.5rem;">
+                        <h3 style="font-size: 1.3rem; text-transform: uppercase; font-weight: 700;">Section 63 BSA 2023 Statutory Certificate</h3>
+                        <p style="font-size: 0.88rem; color: var(--text-muted);">
+                            Pre-filled by SAKSHYA's compliance agent. Mandatory statutory requirement: IO must physically sign. AI cannot certify evidence in court.
+                        </p>
+                    </div>
+
+                    <div class="ws-card" style="margin-bottom: 1.5rem; background: #FFF;">
+                        <div style="border-bottom: 2px solid var(--border-hard); padding-bottom: 1rem; margin-bottom: 1.5rem; text-align: center;">
+                            <h3 style="font-size: 1.3rem; text-transform: uppercase; letter-spacing: 0.05em;">CERTIFICATE UNDER SECTION 63</h3>
+                            <h4 style="font-size: 1rem; color: var(--accent-orange); text-transform: uppercase; font-family: var(--font-mono);">BHARATIYA SAKSHYA ADHINIYAM (BSA), 2023</h4>
+                            <span style="font-size: 0.8rem; color: var(--text-muted);">[ Schedule : Part A (Hardware) & Part B (Expert Hash Validation) ]</span>
+                        </div>
+
+                        <!-- IO Credentials Form -->
+                        <div style="background: #F8FAFC; border: 1.5px solid var(--border-hard); padding: 1rem 1.25rem; border-radius: 6px; margin-bottom: 1.25rem;">
+                            <span style="font-size: 0.8rem; font-weight: bold; color: var(--accent-orange); text-transform: uppercase;">Investigating Officer Certification Details:</span>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-top: 0.75rem;">
+                                <div>
+                                    <label style="font-size: 0.75rem; color: var(--text-muted); font-weight: bold;">IO Full Name:</label>
+                                    <input type="text" id="io-name-input" value="IO Ramesh Kumar" style="width:100%; padding:0.4rem; border:1px solid #111; border-radius:4px; font-size:0.85rem;">
+                                </div>
+                                <div>
+                                    <label style="font-size: 0.75rem; color: var(--text-muted); font-weight: bold;">Designation / Rank:</label>
+                                    <input type="text" id="io-rank-input" value="Inspector of Police" style="width:100%; padding:0.4rem; border:1px solid #111; border-radius:4px; font-size:0.85rem;">
+                                </div>
+                                <div>
+                                    <label style="font-size: 0.75rem; color: var(--text-muted); font-weight: bold;">Police Station / Unit:</label>
+                                    <input type="text" id="io-station-input" value="Kerala Police Cyberdome" style="width:100%; padding:0.4rem; border:1px solid #111; border-radius:4px; font-size:0.85rem;">
+                                </div>
+                                <div>
+                                    <label style="font-size: 0.75rem; color: var(--text-muted); font-weight: bold;">Officer Badge Number:</label>
+                                    <input type="text" id="io-badge-input" value="KB-9481" style="width:100%; padding:0.4rem; border:1px solid #111; border-radius:4px; font-size:0.85rem;">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="background: var(--bg-base); padding: 1.25rem; border: 1.5px solid var(--border-hard); border-radius: 6px; margin-bottom: 1.25rem; font-size: 0.85rem; font-family: var(--font-mono);">
+                            <strong style="color: var(--accent-navy); text-transform: uppercase;">PART A : HARDWARE & EXTRACTION IDENTIFIERS</strong><br><br>
+                            • Case Ref: <code>CY-2026-0841 / EVD-884</code><br>
+                            • Target Device: Apple iPhone 15 Pro Max (Model A3106)<br>
+                            • IMEI / Serial: <code>359281104829104</code> | MAC: <code>A4:DE:48:00:11:22</code><br>
+                            • Forensic Clone Image: Bit-Stream Image <code>clone_drive_01.raw</code>
+                        </div>
+
+                        <div style="background: var(--bg-base); padding: 1.25rem; border: 1.5px solid var(--border-hard); border-radius: 6px; margin-bottom: 1.5rem; font-size: 0.85rem; font-family: var(--font-mono);">
+                            <strong style="color: var(--accent-navy); text-transform: uppercase;">PART B : CRYPTOGRAPHIC EVIDENCE VALIDATION BLOCK</strong><br><br>
+                            • Target Evidence Artifact: <code>/DCIM/100APPLE/IMG_8849.JPG</code><br>
+                            • Cryptographic SHA-256 Hash:<br>
+                            <code style="background: #FFF; padding: 0.4rem; display: block; border: 1px solid var(--border-hard); margin: 0.4rem 0; font-weight: bold; color: var(--accent-orange); word-break: break-all;">
+                                71b70b91e28cc6d4fa8b21008c1e4590119f821a95c47890b21e001928471b8e
+                            </code>
+                            • Extraction Engine: SAKSHYA Sec 63 Agent v1.2 (ALEAPP SQLite Parser)<br>
+                            • Primary Evidence Classification: Section 57 BSA 2023 Primary Evidence (Cache Timeline Verified)
+                        </div>
+
+                        <div style="background: #FFFBEB; border: 1.5px solid #D97706; border-radius: 6px; padding: 1rem; font-size: 0.85rem; color: #92400E; margin-bottom: 1.5rem;">
+                            <strong>⚠ Statutory Mandate (Section 63 BSA 2023):</strong> This certificate has been pre-populated by SAKSHYA. Investigating Officer must verify parameters and sign below. AI accelerates; humans certify.
+                        </div>
+
+                        <div id="ws-cert-signature-area">
+                            <button class="btn btn-primary" onclick="signWsCertificate()" style="width: 100%; justify-content: center; font-size: 0.95rem; padding: 1rem;">
+                                ✒ IO Sign-Off — I Have Verified All Cryptographic Fields
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 6. Charge Sheet Panel -->
+                <div class="ws-panel" id="ws-panel-chargesheet">
+                    <div style="margin-bottom: 1.5rem;">
+                        <h3 style="font-size: 1.3rem; text-transform: uppercase; font-weight: 700;">AI-Drafted Charge Sheet Summary</h3>
+                        <p style="font-size: 0.88rem; color: var(--text-muted);">
+                            Compiled from validated Neo4j evidence graph subgraphs. Always labelled as AI-drafted and requiring IO approval before submission to court.
+                        </p>
+                    </div>
+
+                    <div id="ws-chargesheet-content-area">
+                        <div class="ws-card" style="text-align: center; padding: 3rem 1.5rem;">
+                            <h4 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.75rem;">Generate Legal Charge Sheet Narrative</h4>
+                            <p style="font-size: 0.88rem; color: var(--text-muted); max-width: 500px; margin: 0 auto 1.5rem;">
+                                Compiles chronological timeline of findings, cited exhibits, Section 63 BSA certificate references, and statutory offense mapping.
+                            </p>
+                            <button class="btn btn-primary" onclick="generateWsChargeSheet()">📄 Generate Charge Sheet Draft</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Forensic Artifact Inspector Modal -->
+    <div class="modal-overlay" id="artifact-modal">
+        <div class="modal-content" style="max-width: 750px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 2px solid var(--border-hard); padding-bottom: 0.5rem;">
+                <h3 style="font-size: 1.2rem; font-weight: bold; text-transform: uppercase;">Forensic Artifact Inspector</h3>
+                <button onclick="closeArtifactModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">✕</button>
+            </div>
+            <div id="artifact-modal-body">
+                <!-- Injected dynamically via demo.js -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-bottom">
+            <div class="logo">
+                <div class="logo-shield">सा</div>
+                <span>SAKSHYA WORKSTATION</span>
+            </div>
+            <div style="font-family: var(--font-mono); font-size: 0.8rem; color: #CBD5E1;">
+                © 2026 SAKSHYA | BSA 2023 Compliant | Offline Local-Only LLM Engine
+            </div>
+            <div class="footer-links">
+                <a href="../index.html">Landing Page Overview</a>
+                <a href="../index.html#architecture">System Architecture</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../demo.js"></script>
+</body>
+
+</html>

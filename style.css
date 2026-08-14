@@ -226,16 +226,18 @@ ul {
 
 .nav-links {
     display: flex;
-    gap: 2rem;
+    gap: 1.5rem;
+    align-items: center;
 }
 
 .nav-links a {
-    font-size: 0.85rem;
+    font-size: 0.82rem;
     font-weight: 700;
     text-transform: uppercase;
     position: relative;
     padding-bottom: 2px;
     letter-spacing: 0.03em;
+    white-space: nowrap;
 }
 
 .nav-links a::after {
@@ -251,6 +253,21 @@ ul {
 
 .nav-links a:hover::after {
     width: 100%;
+}
+
+.nav-ws-badge {
+    background: #FFF3EB;
+    color: var(--accent-orange) !important;
+    border: 1.5px solid var(--accent-orange);
+    padding: 0.35rem 0.8rem !important;
+    border-radius: 99px;
+    transition: all 0.2s ease;
+    text-transform: none !important;
+}
+
+.nav-ws-badge:hover {
+    background: var(--accent-orange) !important;
+    color: #FFF !important;
 }
 
 /* ═══════════════════════════════════════════════
